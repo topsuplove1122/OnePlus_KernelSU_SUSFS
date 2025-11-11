@@ -1,0 +1,15 @@
+{
+  "model": "OP15",
+  "soc": "canoe",
+  "branch": "wild/sm8850",
+  "manifest": "oneplus_15_w.xml",
+  "android_version": "android16",
+  "kernel_version": "6.12",
+  "os_version": "OOS16",
+  "hmbird": false,
+  "susfs": false,
+  "bbg": false,
+  "bbr": true,
+  "ttl": true,
+  "ip_set": true
+}
