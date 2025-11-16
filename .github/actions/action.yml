@@ -1193,24 +1193,35 @@ runs:
       run: |
         set -euo pipefail
         echo "::group::Create kernel ZIP package"
-        
+
         CONFIG_DIR="$GITHUB_WORKSPACE/$CONFIG"
         IMAGE_PATH="$CONFIG_DIR/kernel_platform/common/out/arch/arm64/boot/Image"
-        
+
         if [ ! -f "$IMAGE_PATH" ]; then
           echo "::error::Built Image not found at: $IMAGE_PATH"
           exit 1
         fi
-        
+
         cp "$IMAGE_PATH" "$GITHUB_WORKSPACE/AnyKernel3/Image"
         cd "$GITHUB_WORKSPACE/AnyKernel3"
-        
-        ZIP_NAME="AK3_${OP_MODEL}_${OP_OS_VERSION}_${KERNEL_FULL_VER}_Next_${KSUVER}_${SUSVER}.zip"
+
+        # 安全處理沒有啟用 SUSFS 的情況
+        OP_SUSFS_VAL="${OP_SUSFS:-false}"
+        KSUVER_VAL="${KSUVER:-unknown}"
+        SUSVER_VAL="${SUSVER:-}"  # 可能為空
+
+        SUSFS_SUFFIX=""
+        if [[ "$OP_SUSFS_VAL" == "true" && -n "$SUSVER_VAL" ]]; then
+          SUSFS_SUFFIX="_${SUSVER_VAL}"
+        fi
+
+        ZIP_NAME="AK3_${OP_MODEL}_${OP_OS_VERSION}_${KERNEL_FULL_VER}_Next_${KSUVER_VAL}${SUSFS_SUFFIX}.zip"
+
         ARTIFACTS_DIR="$CONFIG_DIR/artifacts"
         mkdir -p "$ARTIFACTS_DIR"
-        
+
         echo "Creating flashable ZIP: $ZIP_NAME"
-        
+
         if ! zip -r9 "$ZIP_NAME" ./* \
              -x "*.git*" \
              -x "$ZIP_NAME" \
@@ -1218,17 +1229,17 @@ runs:
           echo "::error::Failed to create ZIP package"
           exit 1
         fi
-        
+
         mv "$ZIP_NAME" "$ARTIFACTS_DIR/"
-        
+
         find "$ARTIFACTS_DIR" -maxdepth 1 -type f ! -name "$ZIP_NAME" ! -name "${OP_MODEL}_${OP_OS_VERSION}.txt" -delete
-        
+
         ZIP_SIZE=$(stat -c%s "$ARTIFACTS_DIR/$ZIP_NAME")
         ZIP_SHA256=$(sha256sum "$ARTIFACTS_DIR/$ZIP_NAME" | awk '{print $1}')
-        
+
         echo "zip_name=$ZIP_NAME" >> "$GITHUB_OUTPUT"
         echo "ZIP_NAME=$ZIP_NAME" >> "$GITHUB_ENV"
-        
+
         echo ""
         echo "✅ Kernel ZIP created successfully"
         echo "   Name: $ZIP_NAME"
