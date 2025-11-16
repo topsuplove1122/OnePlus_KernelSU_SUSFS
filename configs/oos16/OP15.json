@@ -6,7 +6,7 @@
   "android_version": "android16",
   "kernel_version": "6.12",
   "os_version": "OOS16",
-  "hmbird": false,
+  "hmbird": true,
   "susfs": false,
   "bbg": false,
   "bbr": true,
